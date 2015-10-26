@@ -408,15 +408,7 @@ public class LauncherModel extends BroadcastReceiver
         item.container = container;
         item.cellX = cellX;
         item.cellY = cellY;
-
-        // We store hotseat items in canonical form which is this orientation invariant position
-        // in the hotseat
-        if (context instanceof Launcher && screenId < 0 &&
-                container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
-            item.screenId = ((Launcher) context).getHotseat().getOrderInHotseat(cellX, cellY);
-        } else {
-            item.screenId = screenId;
-        }
+        item.screenId = screenId;
 
         final ContentValues values = new ContentValues();
         values.put(LauncherSettings.Favorites.CONTAINER, item.container);
@@ -441,16 +433,7 @@ public class LauncherModel extends BroadcastReceiver
         for (int i = 0; i < count; i++) {
             ItemInfo item = items.get(i);
             item.container = container;
-
-            // We store hotseat items in canonical form which is this orientation invariant position
-            // in the hotseat
-            if (context instanceof Launcher && screen < 0 &&
-                    container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
-                item.screenId = ((Launcher) context).getHotseat().getOrderInHotseat(item.cellX,
-                        item.cellY);
-            } else {
-                item.screenId = screen;
-            }
+            item.screenId = screen;
 
             final ContentValues values = new ContentValues();
             values.put(LauncherSettings.Favorites.CONTAINER, item.container);
@@ -474,15 +457,7 @@ public class LauncherModel extends BroadcastReceiver
         item.cellY = cellY;
         item.spanX = spanX;
         item.spanY = spanY;
-
-        // We store hotseat items in canonical form which is this orientation invariant position
-        // in the hotseat
-        if (context instanceof Launcher && screenId < 0 &&
-                container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
-            item.screenId = ((Launcher) context).getHotseat().getOrderInHotseat(cellX, cellY);
-        } else {
-            item.screenId = screenId;
-        }
+        item.screenId = screenId;
 
         final ContentValues values = new ContentValues();
         values.put(LauncherSettings.Favorites.CONTAINER, item.container);
@@ -514,14 +489,7 @@ public class LauncherModel extends BroadcastReceiver
         item.container = container;
         item.cellX = cellX;
         item.cellY = cellY;
-        // We store hotseat items in canonical form which is this orientation invariant position
-        // in the hotseat
-        if (context instanceof Launcher && screenId < 0 &&
-                container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
-            item.screenId = ((Launcher) context).getHotseat().getOrderInHotseat(cellX, cellY);
-        } else {
-            item.screenId = screenId;
-        }
+        item.screenId = screenId;
 
         final ContentValues values = new ContentValues();
         final ContentResolver cr = context.getContentResolver();
@@ -2232,29 +2200,29 @@ public class LauncherModel extends BroadcastReceiver
                 final ItemInfo[][] hotseatItems =
                         occupied.get((long) LauncherSettings.Favorites.CONTAINER_HOTSEAT);
 
-                if (item.screenId >= profile.numHotseatIcons) {
+                if (item.cellX >= profile.numHotseatIcons) {
                     Log.e(TAG, "Error loading shortcut " + item
-                            + " into hotseat position " + item.screenId
+                            + " into hotseat position " + item.cellX
                             + ", position out of bounds: (0 to " + (profile.numHotseatIcons - 1)
                             + ")");
                     return false;
                 }
 
                 if (hotseatItems != null) {
-                    if (hotseatItems[(int) item.screenId][0] != null) {
+                    if (hotseatItems[(int) item.cellX][0] != null) {
                         Log.e(TAG, "Error loading shortcut into hotseat " + item
                                 + " into position (" + item.screenId + ":" + item.cellX + ","
                                 + item.cellY + ") occupied by "
                                 + occupied.get(LauncherSettings.Favorites.CONTAINER_HOTSEAT)
-                                [(int) item.screenId][0]);
+                                [item.cellX][0]);
                         return false;
                     } else {
-                        hotseatItems[(int) item.screenId][0] = item;
+                        hotseatItems[item.cellX][0] = item;
                         return true;
                     }
                 } else {
                     final ItemInfo[][] items = new ItemInfo[(int) profile.numHotseatIcons][1];
-                    items[(int) item.screenId][0] = item;
+                    items[item.cellX][0] = item;
                     occupied.put((long) LauncherSettings.Favorites.CONTAINER_HOTSEAT, items);
                     return true;
                 }

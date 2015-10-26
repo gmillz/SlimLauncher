@@ -1166,7 +1166,11 @@ public class Workspace extends PagedView
 
         final CellLayout layout;
         if (container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
-            layout = mLauncher.getHotseat().getLayout();
+            if (screenId < 0 || screenId >= mLauncher.getHotseat().getChildCount()) {
+                layout = (CellLayout) mLauncher.getHotseat().getLayout();
+            } else {
+                layout = (CellLayout) mLauncher.getHotseat().getPageAt((int) screenId);
+            }
             child.setOnKeyListener(new HotseatIconKeyEventListener());
 
             // Hide folder title in the hotseat
@@ -1174,12 +1178,8 @@ public class Workspace extends PagedView
                 ((FolderIcon) child).setTextVisible(false);
             }
 
-            if (computeXYFromRank) {
-                x = mLauncher.getHotseat().getCellXFromOrder((int) screenId);
-                y = mLauncher.getHotseat().getCellYFromOrder((int) screenId);
-            } else {
-                screenId = mLauncher.getHotseat().getOrderInHotseat(x, y);
-            }
+            x = mLauncher.getHotseat().getCellXFromOrder(x);
+            y = mLauncher.getHotseat().getCellYFromOrder(y);
         } else {
             // Show folder title if not in the hotseat
             if (child instanceof FolderIcon) {
@@ -2520,7 +2520,10 @@ public class Workspace extends PagedView
 
         if (v == null || hasntMoved || !mCreateUserFolderOnDrop) return false;
         mCreateUserFolderOnDrop = false;
-        final long screenId = (targetCell == null) ? mDragInfo.screenId : getIdForScreen(target);
+        final long screenId = (targetCell == null) ? mDragInfo.screenId :
+                (mLauncher.isHotseatLayout(target) ?
+                        mLauncher.getHotseat().indexOfChild(target) :
+                        getIdForScreen(target));
 
         boolean aboveShortcut = (v.getTag() instanceof ShortcutInfo);
         boolean willBecomeShortcut = (newView.getTag() instanceof ShortcutInfo);
@@ -2616,7 +2619,9 @@ public class Workspace extends PagedView
                         LauncherSettings.Favorites.CONTAINER_HOTSEAT :
                         LauncherSettings.Favorites.CONTAINER_DESKTOP;
                 long screenId = (mTargetCell[0] < 0) ?
-                        mDragInfo.screenId : getIdForScreen(dropTargetLayout);
+                        mDragInfo.screenId : (hasMovedIntoHotseat ?
+                        mLauncher.getHotseat().indexOfChild(dropTargetLayout)
+                        : indexOfChild(dropTargetLayout));
                 int spanX = mDragInfo != null ? mDragInfo.spanX : 1;
                 int spanY = mDragInfo != null ? mDragInfo.spanY : 1;
                 // First we find the cell nearest to point at which the item is
@@ -3292,7 +3297,9 @@ public class Workspace extends PagedView
         final long container = mLauncher.isHotseatLayout(cellLayout) ?
                 LauncherSettings.Favorites.CONTAINER_HOTSEAT :
                 LauncherSettings.Favorites.CONTAINER_DESKTOP;
-        final long screenId = getIdForScreen(cellLayout);
+        final long screenId = mLauncher.isHotseatLayout(cellLayout) ?
+                mLauncher.getHotseat().indexOfChild(cellLayout) :
+                getIdForScreen(cellLayout);
         if (!mLauncher.isHotseatLayout(cellLayout)
                 && screenId != getScreenIdForPageIndex(mCurrentPage)
                 && mState != State.SPRING_LOADED) {
@@ -3923,8 +3930,11 @@ public class Workspace extends PagedView
         for (int screen = 0; screen < screenCount; screen++) {
             layouts.add(((CellLayout) getChildAt(screen)));
         }
-        if (mLauncher.getHotseat() != null) {
-            layouts.add(mLauncher.getHotseat().getLayout());
+        Hotseat hotseat = mLauncher.getHotseat();
+        if (hotseat != null) {
+            for (int screen = 0; screen < hotseat.getChildCount(); screen++) {
+                layouts.add((CellLayout) hotseat.getPageAt(screen));
+            }
         }
         return layouts;
     }
@@ -3947,8 +3957,11 @@ public class Workspace extends PagedView
         for (int screen = 0; screen < screenCount; screen++) {
             childrenLayouts.add(((CellLayout) getChildAt(screen)).getShortcutsAndWidgets());
         }
-        if (mLauncher.getHotseat() != null) {
-            childrenLayouts.add(mLauncher.getHotseat().getLayout().getShortcutsAndWidgets());
+        Hotseat hotseat = mLauncher.getHotseat();
+        if (hotseat != null) {
+            for (int screen = 0; screen < hotseat.getChildCount(); screen++) {
+                childrenLayouts.add(((CellLayout) hotseat.getPageAt(screen)).getShortcutsAndWidgets());
+            }
         }
         return childrenLayouts;
     }

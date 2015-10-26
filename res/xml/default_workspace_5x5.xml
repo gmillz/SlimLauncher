@@ -79,13 +79,13 @@
         launcher:packageName="com.android.contacts"
         launcher:className="com.android.contacts.activities.PeopleActivity"
         launcher:container="-101"
-        launcher:screen="1"
+        launcher:screen="0"
         launcher:x="1"
         launcher:y="0" />
 
     <resolve
         launcher:container="-101"
-        launcher:screen="3"
+        launcher:screen="0"
         launcher:x="3"
         launcher:y="0" >
         <favorite
@@ -101,7 +101,7 @@
     </resolve>
     <resolve
         launcher:container="-101"
-        launcher:screen="4"
+        launcher:screen="0"
         launcher:x="4"
         launcher:y="0" >
         <favorite

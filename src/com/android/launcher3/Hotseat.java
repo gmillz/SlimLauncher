@@ -19,10 +19,12 @@ package com.android.launcher3;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.widget.FrameLayout;
+import android.view.View;
 
-public class Hotseat extends FrameLayout
+public class Hotseat extends PagedView
         implements Stats.LaunchSourceProvider {
 
     private final boolean mHasVerticalHotseat;
@@ -40,12 +42,38 @@ public class Hotseat extends FrameLayout
 
     public Hotseat(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        mFadeInAdjacentScreens = false;
+        //mHandleScrollIndicator = true;
+
+        setDataIsReady();
+
+        int hotseatPages = 3;
+
+        LayoutInflater inflater =
+                (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        for (int i = 0; i < hotseatPages; i++) {
+            inflater.inflate(R.layout.hotseat_page, this);
+        }
+        setCurrentPage(2);
+
+        mAllowOverScroll = true;
         mLauncher = (Launcher) context;
         mHasVerticalHotseat = mLauncher.getDeviceProfile().isVerticalBarLayout();
     }
 
     CellLayout getLayout() {
-        return mContent;
+        return (CellLayout) getPageAt(mCurrentPage);
+    }
+
+    public boolean hasPage(View view) {
+        for (int i = 0; i < getChildCount(); i++) {
+            if (view == getChildAt(i)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -60,12 +88,14 @@ public class Hotseat extends FrameLayout
      */
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        mContent.setOnLongClickListener(l);
+        for (int i = 0; i < getChildCount(); i++) {
+            getPageAt(i).setOnLongClickListener(l);
+        }
     }
 
     /* Get the orientation invariant order of the item in the hotseat for persistence. */
     int getOrderInHotseat(int x, int y) {
-        return mHasVerticalHotseat ? (mContent.getCountY() - y - 1) : x;
+        return mHasVerticalHotseat ? (mCellCountY - y - 1) : x;
     }
 
     /* Get the orientation specific coordinates given an invariant order in the hotseat. */
@@ -74,7 +104,7 @@ public class Hotseat extends FrameLayout
     }
 
     int getCellYFromOrder(int rank) {
-        return mHasVerticalHotseat ? (mContent.getCountY() - (rank + 1)) : 0;
+        return mHasVerticalHotseat ? (mCellCountY - (rank + 1)) : 0;
     }
 
     public boolean isAllAppsButtonRank(int rank) {
@@ -92,34 +122,53 @@ public class Hotseat extends FrameLayout
         DeviceProfile grid = mLauncher.getDeviceProfile();
 
         mAllAppsButtonRank = grid.inv.hotseatAllAppsRank;
-        mContent = (CellLayout) findViewById(R.id.layout);
         if (grid.isLandscape && !grid.isLargeTablet) {
-            mContent.setGridSize(1, (int) grid.inv.numHotseatIcons);
+            mCellCountX = 1;
+            mCellCountY = (int) grid.inv.numHotseatIcons;
         } else {
-            mContent.setGridSize((int) grid.inv.numHotseatIcons, 1);
+            mCellCountX = (int) grid.inv.numHotseatIcons;
+            mCellCountY = 1;
         }
-        mContent.setIsHotseat(true);
-        mContent.updateHotseatScale(grid);
-
+        for (int i = 0; i < getChildCount(); i++) {
+            Log.d("TEST", "item=" + i);
+            CellLayout cl = (CellLayout) getPageAt(i);
+            cl.setGridSize(mCellCountX, mCellCountY);
+            cl.setIsHotseat(true);
+            cl.updateHotseatScale(grid);
+        }
         resetLayout();
     }
 
     void resetLayout() {
-        mContent.removeAllViewsInLayout();
+        for (int i = 0; i < getChildCount(); i++) {
+            ((CellLayout) getPageAt(i)).removeAllViewsInLayout();
+        }
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         // We don't want any clicks to go through to the hotseat unless the workspace is in
         // the normal state.
-        if (mLauncher.getWorkspace().workspaceInModalState()) {
-            return true;
-        }
-        return false;
+        return mLauncher.getWorkspace().workspaceInModalState();
     }
 
     @Override
     public void fillInLaunchSourceData(Bundle sourceData) {
         sourceData.putString(Stats.SOURCE_EXTRA_CONTAINER, Stats.CONTAINER_HOTSEAT);
+    }
+
+    @Override
+    protected void getEdgeVerticalPostion(int[] pos) {
+        View child = getChildAt(getPageCount() - 1);
+        pos[0] = child.getTop();
+        pos[1] = child.getBottom();
+    }
+
+    @Override
+    public void syncPages() {
+    }
+
+    @Override
+    public void syncPageItems(int page, boolean immediate) {
     }
 }
