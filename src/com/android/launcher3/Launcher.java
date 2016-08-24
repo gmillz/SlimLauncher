@@ -3403,7 +3403,7 @@ public class Launcher extends Activity
     /**
      * Shows the overview button.
      */
-    void showOverviewMode(boolean animated) {
+    public void showOverviewMode(boolean animated) {
         showOverviewMode(animated, false);
     }
 
@@ -3435,7 +3435,7 @@ public class Launcher extends Activity
     /**
      * Shows the apps view.
      */
-    void showAppsView(boolean animated, boolean resetListToTop, boolean updatePredictedApps,
+    public void showAppsView(boolean animated, boolean resetListToTop, boolean updatePredictedApps,
             boolean focusSearchBar) {
         if (resetListToTop) {
             mAppsView.scrollToTop();
