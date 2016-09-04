@@ -21,25 +21,28 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.text.TextUtils;
 
 import com.android.launcher3.R;
 
 import java.net.URISyntaxException;
 
+@SuppressWarnings("unused")
 public class AppHelper {
 
     private static final String SETTINGS_METADATA_NAME = "com.android.settings";
 
     public static String getProperSummary(Context context, PackageManager pm,
-                                          Resources settingsResources, String action, String values, String entries) {
+                                          Resources settingsResources, String action,
+                                          String values, String entries) {
 
         if (pm == null || settingsResources == null || action == null) {
             return context.getResources().getString(R.string.error_message_title);
         }
 
         if (values != null && entries != null) {
-            int resIdEntries = -1;
-            int resIdValues = -1;
+            int resIdEntries;
+            int resIdValues;
 
             resIdEntries = settingsResources.getIdentifier(
                     SETTINGS_METADATA_NAME + ":array/" + entries, null, null);
@@ -72,7 +75,7 @@ public class AppHelper {
 
         if (ai != null) {
             friendlyName = ai.loadLabel(pm).toString();
-            if (friendlyName == null && !labelOnly) {
+            if (!labelOnly) {
                 friendlyName = ai.name;
             }
         }
@@ -80,7 +83,7 @@ public class AppHelper {
         if (friendlyName == null || friendlyName.startsWith("#Intent;")) {
             return context.getResources().getString(R.string.error_message_title);
         }
-        return friendlyName != null || labelOnly ? friendlyName : intent.toUri(0);
+        return friendlyName;
     }
 
     public static String getFriendlyShortcutName(
@@ -91,10 +94,10 @@ public class AppHelper {
         if (activityName == null || activityName.startsWith("#Intent;")) {
             return context.getResources().getString(R.string.error_message_title);
         }
-        if (activityName != null && name != null) {
+        if (!TextUtils.isEmpty(activityName) && name != null) {
             return activityName + ": " + name;
         }
-        return name != null ? name : intent.toUri(0);
+        return TextUtils.isEmpty(name) ? name : intent.toUri(0);
     }
 
     public static String getFriendlyNameForUri(
@@ -110,6 +113,7 @@ public class AppHelper {
             }
             return getFriendlyShortcutName(context, pm, intent);
         } catch (URISyntaxException e) {
+            // ignore
         }
 
         return uri;
@@ -128,6 +132,7 @@ public class AppHelper {
             }
             return name;
         } catch (URISyntaxException e) {
+            // ignore
         }
 
         return uri;

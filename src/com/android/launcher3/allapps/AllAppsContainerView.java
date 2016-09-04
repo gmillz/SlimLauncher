@@ -25,6 +25,7 @@ import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.method.TextKeyListener;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -41,6 +42,7 @@ import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
 import com.android.launcher3.ExtendedEditText;
 import com.android.launcher3.Folder;
+import com.android.launcher3.FolderInfo;
 import com.android.launcher3.ItemInfo;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherTransitionable;
@@ -66,7 +68,8 @@ final class FullMergeAlgorithm implements AlphabeticalAppsList.MergeAlgorithm {
            AlphabeticalAppsList.SectionInfo withSection,
            int sectionAppCount, int numAppsPerRow, int mergeCount) {
         // Don't merge the predicted apps
-        if (section.firstAppItem.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE) {
+        if (section.firstAppItem.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE
+                && section.firstAppItem.viewType != AllAppsGridAdapter.FOLDER_VIEW_TYPE) {
             return false;
         }
         // Otherwise, merge every other section
@@ -98,7 +101,8 @@ final class SimpleSectionMergeAlgorithm implements AlphabeticalAppsList.MergeAlg
            AlphabeticalAppsList.SectionInfo withSection,
            int sectionAppCount, int numAppsPerRow, int mergeCount) {
         // Don't merge the predicted apps
-        if (section.firstAppItem.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE) {
+        if (section.firstAppItem.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE
+                && section.firstAppItem.viewType != AllAppsGridAdapter.FOLDER_VIEW_TYPE) {
             return false;
         }
 
@@ -204,6 +208,26 @@ public class AllAppsContainerView extends BaseContainerView implements DragSourc
      */
     public void addApps(List<AppInfo> apps) {
         mApps.addApps(apps);
+    }
+
+    public void updateDrawerFolders() {
+        mApps.updateFolders();
+    }
+
+    public Folder getOpenFolder() {
+        for (FolderInfo info : mApps.getFolders()) {
+            if (info.opened) {
+                Log.d("TEST", "open folder=" + info.title);
+                for (Folder folder : mAdapter.getAppFolders()) {
+                    Log.d("TEST", "checking=" + folder.getInfo().title);
+                    if (folder.getInfo().id == info.id) {
+                        Log.d("TEST", "matches");
+                        return folder;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**

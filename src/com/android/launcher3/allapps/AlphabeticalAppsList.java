@@ -19,12 +19,16 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import com.android.launcher3.AppInfo;
+import com.android.launcher3.FolderInfo;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherModel;
 import com.android.launcher3.compat.AlphabeticIndexCompat;
 import com.android.launcher3.compat.UserHandleCompat;
 import com.android.launcher3.model.AppNameComparator;
 import com.android.launcher3.util.ComponentKey;
+
+import org.slim.launcher.SlimLauncher;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,6 +49,8 @@ public class AlphabeticalAppsList {
 
     private static final int FAST_SCROLL_FRACTION_DISTRIBUTE_BY_ROWS_FRACTION = 0;
     private static final int FAST_SCROLL_FRACTION_DISTRIBUTE_BY_NUM_SECTIONS = 1;
+
+    private static final int FOLDER_TYPE = 1001001001;
 
     private final int mFastScrollDistributionMode = FAST_SCROLL_FRACTION_DISTRIBUTE_BY_NUM_SECTIONS;
 
@@ -103,6 +109,8 @@ public class AlphabeticalAppsList {
         public int rowAppIndex;
         // The associated AppInfo for the app
         public AppInfo appInfo = null;
+        // The associated FolderInfo for the folder
+        public FolderInfo folderInfo = null;
         // The index of this app not including sections
         public int appIndex = -1;
 
@@ -131,6 +139,19 @@ public class AlphabeticalAppsList {
             item.sectionName = sectionName;
             item.sectionAppIndex = sectionAppIndex;
             item.appInfo = appInfo;
+            item.appIndex = appIndex;
+            return item;
+        }
+
+        public static AdapterItem asFolder(int pos, SectionInfo section, String sectionName,
+                                           int sectionAppIndex, FolderInfo folderInfo, int appIndex) {
+            AdapterItem item = new AdapterItem();
+            item.viewType = AllAppsGridAdapter.FOLDER_VIEW_TYPE;
+            item.position = pos;
+            item.sectionInfo = section;
+            item.sectionName = sectionName;
+            item.sectionAppIndex = sectionAppIndex;
+            item.folderInfo = folderInfo;
             item.appIndex = appIndex;
             return item;
         }
@@ -194,6 +215,9 @@ public class AlphabeticalAppsList {
     private int mNumPredictedAppsPerRow;
     private int mNumAppRowsInAdapter;
 
+    // Folders in grid
+    private List<FolderInfo> mFolders = new ArrayList<>();
+
     public AlphabeticalAppsList(Context context) {
         mLauncher = (Launcher) context;
         mIndexer = new AlphabeticIndexCompat(context);
@@ -245,6 +269,10 @@ public class AlphabeticalAppsList {
      */
     public List<AdapterItem> getAdapterItems() {
         return mAdapterItems;
+    }
+
+    public List<FolderInfo> getFolders() {
+        return mFolders;
     }
 
     /**
@@ -334,6 +362,17 @@ public class AlphabeticalAppsList {
         for (AppInfo app : apps) {
             mComponentToAppMap.remove(app.toComponentKey());
         }
+        onAppsUpdated();
+    }
+
+    public void updateFolders() {
+        mFolders.clear();
+        for (FolderInfo info : LauncherModel.getFolder()) {
+            if (info.container == SlimLauncher.CONTAINER_APP_DRAWER) {
+                mFolders.add(info);
+            }
+        }
+        Log.d("TEST", "mFolders.size()=" + mFolders.size());
         onAppsUpdated();
     }
 
@@ -461,8 +500,14 @@ public class AlphabeticalAppsList {
 
         // Recreate the filtered and sectioned apps (for convenience for the grid layout) from the
         // ordered set of sections
-        for (AppInfo info : getFiltersAppInfos()) {
-            String sectionName = getAndUpdateCachedSectionName(info.title);
+        List<AppInfo> apps = getFiltersAppInfos();
+        for (AppInfo info : apps) {
+            String sectionName;
+            if (info.itemType == FOLDER_TYPE) {
+                sectionName = getAndUpdateCachedSectionName("#");
+            } else {
+                sectionName = getAndUpdateCachedSectionName(info.title);
+            }
 
             // Create a new section if the section names do not match
             if (lastSectionInfo == null || !sectionName.equals(lastSectionName)) {
@@ -480,15 +525,25 @@ public class AlphabeticalAppsList {
             }
 
             // Create an app item
-            AdapterItem appItem = AdapterItem.asApp(position++, lastSectionInfo, sectionName,
-                    lastSectionInfo.numApps++, info, appIndex++);
+            Log.d("TEST", "app=" + info.title + " : position=" + position + " : appIndex=" + appIndex);
+
+            AdapterItem appItem;
+            if (info.itemType == FOLDER_TYPE) {
+                appItem = AdapterItem.asFolder(position++, lastSectionInfo, sectionName,
+                        lastSectionInfo.numApps++, mFolders.get(info.rank), appIndex++);
+            } else {
+                appItem = AdapterItem.asApp(position++, lastSectionInfo, sectionName,
+                        lastSectionInfo.numApps++, info, appIndex++);
+                mFilteredApps.add(info);
+            }
             if (lastSectionInfo.firstAppItem == null) {
                 lastSectionInfo.firstAppItem = appItem;
                 lastFastScrollerSectionInfo.fastScrollToItem = appItem;
             }
             mAdapterItems.add(appItem);
-            mFilteredApps.add(info);
         }
+
+        Log.d("TEST", "apps-array.size()=" + apps.size() + " : position-" + position + " : appIndex=" + appIndex);
 
         // Append the search market item if we are currently searching
         if (hasFilter()) {
@@ -514,6 +569,7 @@ public class AlphabeticalAppsList {
                 if (item.viewType == AllAppsGridAdapter.SECTION_BREAK_VIEW_TYPE) {
                     numAppsInSection = 0;
                 } else if (item.viewType == AllAppsGridAdapter.ICON_VIEW_TYPE ||
+                        item.viewType == AllAppsGridAdapter.FOLDER_VIEW_TYPE ||
                         item.viewType == AllAppsGridAdapter.PREDICTION_ICON_VIEW_TYPE) {
                     if (numAppsInSection % mNumAppsPerRow == 0) {
                         numAppsInRow = 0;
@@ -534,6 +590,7 @@ public class AlphabeticalAppsList {
                     for (FastScrollSectionInfo info : mFastScrollerSections) {
                         AdapterItem item = info.fastScrollToItem;
                         if (item.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE &&
+                                item.viewType != AllAppsGridAdapter.FOLDER_VIEW_TYPE &&
                                 item.viewType != AllAppsGridAdapter.PREDICTION_ICON_VIEW_TYPE) {
                             info.touchFraction = 0f;
                             continue;
@@ -549,6 +606,7 @@ public class AlphabeticalAppsList {
                     for (FastScrollSectionInfo info : mFastScrollerSections) {
                         AdapterItem item = info.fastScrollToItem;
                         if (item.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE &&
+                                item.viewType != AllAppsGridAdapter.FOLDER_VIEW_TYPE &&
                                 item.viewType != AllAppsGridAdapter.PREDICTION_ICON_VIEW_TYPE) {
                             info.touchFraction = 0f;
                             continue;
@@ -568,7 +626,15 @@ public class AlphabeticalAppsList {
 
     private List<AppInfo> getFiltersAppInfos() {
         if (mSearchResults == null) {
-            return mApps;
+            List<AppInfo> apps = new ArrayList<>();
+            apps.addAll(mApps);
+            for (FolderInfo folderInfo : mFolders) {
+                AppInfo info = new AppInfo(FOLDER_TYPE);
+                info.title = folderInfo.title;
+                info.rank = mFolders.indexOf(folderInfo);
+                apps.add(0, info);
+            }
+            return apps;
         }
 
         ArrayList<AppInfo> result = new ArrayList<>();

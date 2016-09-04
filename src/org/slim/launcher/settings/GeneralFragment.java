@@ -18,6 +18,7 @@ package org.slim.launcher.settings;
 
 import android.os.Bundle;
 
+@SuppressWarnings("unused")
 public class GeneralFragment extends SettingsPreferenceFragment {
 
     @Override

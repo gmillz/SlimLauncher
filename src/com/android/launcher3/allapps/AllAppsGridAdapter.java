@@ -43,11 +43,15 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 import com.android.launcher3.AppInfo;
 import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.Folder;
+import com.android.launcher3.FolderIcon;
+import com.android.launcher3.FolderInfo;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -64,6 +68,8 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
     public static final int SECTION_BREAK_VIEW_TYPE = 0;
     // A normal icon
     public static final int ICON_VIEW_TYPE = 1;
+    // A folder icon
+    public static final int FOLDER_VIEW_TYPE = 9;
     // A prediction icon
     public static final int PREDICTION_ICON_VIEW_TYPE = 2;
     // The message shown when there are no filtered results
@@ -121,7 +127,8 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
 
             int viewType = getItemViewType(host);
             // Only initialize on node that is meaningful. Subtract empty row count.
-            if (viewType == ICON_VIEW_TYPE || viewType == PREDICTION_ICON_VIEW_TYPE) {
+            if (viewType == ICON_VIEW_TYPE || viewType == PREDICTION_ICON_VIEW_TYPE
+                    || viewType == FOLDER_VIEW_TYPE) {
                 super.onInitializeAccessibilityNodeInfoForItem(recycler, state, host, info);
                 CollectionItemInfoCompat itemInfo = info.getCollectionItemInfo();
                 if (itemInfo != null) {
@@ -159,11 +166,13 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
                 if (mApps.hasPredictedComponents()) {
                     if (viewType == PREDICTION_ICON_VIEW_TYPE) {
                         numEmptyNode = 1;
-                    } else if (viewType == ICON_VIEW_TYPE) {
+                    } else if (viewType == ICON_VIEW_TYPE
+                            || viewType == FOLDER_VIEW_TYPE) {
                         numEmptyNode = 2;
                     }
                 } else {
-                    if (viewType == ICON_VIEW_TYPE) {
+                    if (viewType == ICON_VIEW_TYPE
+                            || viewType == FOLDER_VIEW_TYPE) {
                         numEmptyNode = 1;
                     }
                 }
@@ -187,6 +196,7 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
             switch (mApps.getAdapterItems().get(position).viewType) {
                 case AllAppsGridAdapter.ICON_VIEW_TYPE:
                 case AllAppsGridAdapter.PREDICTION_ICON_VIEW_TYPE:
+                case AllAppsGridAdapter.FOLDER_VIEW_TYPE:
                     return 1;
                 default:
                     // Section breaks span the full width
@@ -369,7 +379,8 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
             AlphabeticalAppsList.AdapterItem item = items.get(pos);
 
             // Ensure it's an icon
-            if (item.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE) {
+            if (item.viewType != AllAppsGridAdapter.ICON_VIEW_TYPE
+                    && item.viewType != AllAppsGridAdapter.FOLDER_VIEW_TYPE) {
                 return false;
             }
             // Draw the section header for the first item in each section
@@ -401,6 +412,8 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
     private int mAppsPerRow;
     private BindViewCallback mBindViewCallback;
     private AllAppsSearchBarController mSearchController;
+
+    private List<Folder> mAppFolders = new ArrayList<>();
 
     // The text to show when there are no search results and no market search handler.
     private String mEmptySearchMessage;
@@ -510,6 +523,10 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
         return mItemDecoration;
     }
 
+    public List<Folder> getAppFolders() {
+        return mAppFolders;
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
@@ -525,6 +542,10 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
                         .getLongPressTimeout());
                 icon.setFocusable(true);
                 return new ViewHolder(icon);
+            }
+            case FOLDER_VIEW_TYPE: {
+                return new ViewHolder(mLayoutInflater.inflate(R.layout.folder_icon,
+                        parent, false));
             }
             case PREDICTION_ICON_VIEW_TYPE: {
                 BubbleTextView icon = (BubbleTextView) mLayoutInflater.inflate(
@@ -567,6 +588,13 @@ public class AllAppsGridAdapter extends RecyclerView.Adapter<AllAppsGridAdapter.
                 icon.applyFromApplicationInfo(info);
                 icon.setAccessibilityDelegate(
                         LauncherAppState.getInstance().getAccessibilityDelegate());
+                break;
+            }
+            case FOLDER_VIEW_TYPE: {
+                FolderInfo info = mApps.getAdapterItems().get(position).folderInfo;
+                FolderIcon icon = (FolderIcon) holder.mContent;
+                FolderIcon.updateIconFromInfo(mLauncher, icon, info);
+                mAppFolders.add(icon.getFolder());
                 break;
             }
             case PREDICTION_ICON_VIEW_TYPE: {

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+@SuppressWarnings("unused")
 public class SettingsProvider implements SettingsKeys {
 
     public static SharedPreferences get(Context context) {

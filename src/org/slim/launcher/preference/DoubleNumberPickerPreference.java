@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -93,9 +92,7 @@ public class DoubleNumberPickerPreference extends DialogPreference {
             min2 = getSharedPreferences().getInt(mMinExternalKey2, mMin2);
         }
 
-        LayoutInflater inflater =
-                (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.double_number_picker_dialog, null);
+        View view = View.inflate(getContext(), R.layout.double_number_picker_dialog, null);
 
         mNumberPicker1 = (NumberPicker) view.findViewById(R.id.number_picker_1);
         mNumberPicker2 = (NumberPicker) view.findViewById(R.id.number_picker_2);
@@ -152,21 +149,32 @@ public class DoubleNumberPickerPreference extends DialogPreference {
         }
     }
 
+    @SuppressWarnings("unused")
     public void setMin1(int min) {
         mMin1 = min;
     }
+
+    @SuppressWarnings("unused")
     public void setMax1(int max) {
         mMax1 = max;
     }
+
+    @SuppressWarnings("unused")
     public void setMin2(int min) {
         mMin2 = min;
     }
+
+    @SuppressWarnings("unused")
     public void setMax2(int max) {
         mMax2 = max;
     }
+
+    @SuppressWarnings("unused")
     public void setDefault1(int def) {
         mDefault1 = def;
     }
+
+    @SuppressWarnings("unused")
     public void setDefault2(int def) {
         mDefault2 = def;
     }

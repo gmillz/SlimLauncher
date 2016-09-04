@@ -4520,7 +4520,7 @@ public class Workspace extends PagedView
         }
     }
 
-    void moveToDefaultScreen(boolean animate) {
+    public void moveToDefaultScreen(boolean animate) {
         moveToScreen(mDefaultPage, animate);
     }
 

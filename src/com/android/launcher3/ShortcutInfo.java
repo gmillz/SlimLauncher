@@ -147,6 +147,11 @@ public class ShortcutInfo extends ItemInfo {
      */
     Intent promisedIntent;
 
+    /**
+     * Whether this shortcut holds a launcher action
+     */
+    public boolean launcherAction = false;
+
     ShortcutInfo() {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
     }
@@ -303,6 +308,15 @@ public class ShortcutInfo extends ItemInfo {
     @Override
     public boolean isDisabled() {
         return isDisabled != 0;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof ShortcutInfo) {
+            ShortcutInfo otherInfo = (ShortcutInfo) other;
+            return toString().equals(other.toString());
+        }
+        return false;
     }
 }
 

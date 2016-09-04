@@ -57,6 +57,8 @@ import com.android.launcher3.config.ProviderConfig;
 import com.android.launcher3.util.ManagedProfileHeuristic;
 import com.android.launcher3.util.Thunk;
 
+import org.slim.launcher.SlimLauncher;
+
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -307,6 +309,7 @@ public class LauncherProvider extends ContentProvider {
             // Select folders whose id do not match any container value.
             String selection = LauncherSettings.Favorites.ITEM_TYPE + " = "
                     + LauncherSettings.Favorites.ITEM_TYPE_FOLDER + " AND "
+                    + Favorites.CONTAINER + " <> " + SlimLauncher.CONTAINER_APP_DRAWER + " AND "
                     + LauncherSettings.Favorites._ID +  " NOT IN (SELECT " +
                             LauncherSettings.Favorites.CONTAINER + " FROM "
                                 + TABLE_FAVORITES + ")";

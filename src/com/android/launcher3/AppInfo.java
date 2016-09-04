@@ -68,6 +68,10 @@ public class AppInfo extends ItemInfo {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
     }
 
+    public AppInfo(int type) {
+        itemType = type;
+    }
+
     public Intent getIntent() {
         return intent;
     }
@@ -140,7 +144,7 @@ public class AppInfo extends ItemInfo {
     public static void dumpApplicationInfoList(String tag, String label, ArrayList<AppInfo> list) {
         Log.d(tag, label + " size=" + list.size());
         for (AppInfo info: list) {
-            Log.d(tag, "   title=\"" + info.title + "\" iconBitmap=" + info.iconBitmap 
+            Log.d(tag, "   title=\"" + info.title + "\" iconBitmap=" + info.iconBitmap
                     + " componentName=" + info.componentName.getPackageName());
         }
     }

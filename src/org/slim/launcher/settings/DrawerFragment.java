@@ -18,10 +18,15 @@ package org.slim.launcher.settings;
 
 import android.os.Bundle;
 
+import com.android.launcher3.R;
+
+@SuppressWarnings("unused")
 public class DrawerFragment extends SettingsPreferenceFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        addPreferencesFromResource(R.xml.drawer_preferences);
     }
 }

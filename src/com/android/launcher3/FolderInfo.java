@@ -18,6 +18,7 @@ package com.android.launcher3;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.android.launcher3.compat.UserHandleCompat;
 
@@ -49,7 +50,7 @@ public class FolderInfo extends ItemInfo {
     /**
      * Whether this folder has been opened
      */
-    boolean opened;
+    public boolean opened;
 
     public int options;
 

@@ -64,6 +64,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.os.UserHandle;
@@ -3155,7 +3156,9 @@ public class Launcher extends Activity
         info.opened = true;
 
         // While the folder is open, the position of the icon cannot change.
-        ((CellLayout.LayoutParams) folderIcon.getLayoutParams()).canReorder = false;
+        if (folderIcon.getLayoutParams() instanceof CellLayout.LayoutParams) {
+            ((CellLayout.LayoutParams) folderIcon.getLayoutParams()).canReorder = false;
+        }
 
         // Just verify that the folder hasn't already been added to the DragLayer.
         // There was a one-off crash where the folder had a parent already.

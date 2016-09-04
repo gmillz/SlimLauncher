@@ -17,7 +17,9 @@
 package org.slim.launcher.settings;
 
 import android.content.SharedPreferences;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 import android.view.MenuItem;
 
 import com.android.launcher3.R;
@@ -27,14 +29,16 @@ import org.slim.launcher.SlimLauncher;
 import java.util.List;
 
 public class SettingsActivity extends PreferenceActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        PreferenceFragment.OnPreferenceStartFragmentCallback {
 
     @Override
     public void onResume() {
         super.onResume();
         SettingsProvider.get(this).registerOnSharedPreferenceChangeListener(this);
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getActionBar() != null)
+            getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -49,6 +53,15 @@ public class SettingsActivity extends PreferenceActivity implements
         updateHeaders(target);
     }
 
+    @Override
+    public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
+        int titleRes = pref.getTitleRes();
+        startPreferencePanel(pref.getFragment(), pref.getExtras(), titleRes, pref.getTitle(),
+                null, 0);
+        return true;
+    }
+
+    @SuppressWarnings("unused")
     private void updateHeaders(List<Header> headers) {
         /*for (Header header : headers) {
             if (header.id == R.id.slim_application_version) {

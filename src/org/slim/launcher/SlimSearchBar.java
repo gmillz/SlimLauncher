@@ -10,7 +10,6 @@ import org.slim.launcher.settings.SettingsProvider;
 public class SlimSearchBar extends RelativeLayout {
 
     private SlimLauncher mSlimLauncher;
-    private View mSearchBar;
 
     private boolean mShowSearchBar;
 
@@ -26,6 +25,7 @@ public class SlimSearchBar extends RelativeLayout {
         mSlimLauncher = slimLauncher;
     }
 
+    @SuppressWarnings("unused")
     public void updateSetting(String key) {
         if (key.equals(SettingsProvider.KEY_SHOW_SEARCH_BAR)) {
             updateSearchBarVisibility();

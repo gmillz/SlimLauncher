@@ -9,22 +9,25 @@ import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.android.launcher3.AppInfo;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Folder;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherCallbacks;
 import com.android.launcher3.R;
+import com.android.launcher3.ShortcutInfo;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.WorkspaceCallbacks;
 import com.android.launcher3.allapps.AllAppsSearchBarController;
-import org.slim.launcher.settings.SettingsActivity;
-import org.slim.launcher.settings.SettingsProvider;
 import com.android.launcher3.util.ComponentKey;
 
+import org.slim.launcher.settings.SettingsActivity;
+import org.slim.launcher.settings.SettingsProvider;
 import org.slim.launcher.util.GestureHelper;
 
 import java.io.FileDescriptor;
@@ -34,12 +37,18 @@ import java.util.List;
 
 public class SlimLauncher extends Launcher {
 
+    public static final long CONTAINER_APP_DRAWER = -1004;
+
     private static SlimLauncher sLauncher;
 
     private SlimDeviceProfile mSlimProfile;
     private GestureHelper mGestureHelper;
 
     private SlimSearchBar mSearchBar;
+
+    public static SlimLauncher getInstance() {
+        return sLauncher;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +68,7 @@ public class SlimLauncher extends Launcher {
     public void updateDynamicGrid() {
         mSlimProfile.updateFromPreferences();
         getDeviceProfile().layout(this);
+        getAppsView().updateDrawerFolders();
     }
 
     void setInitialPreferences() {
@@ -84,6 +94,19 @@ public class SlimLauncher extends Launcher {
                 updateSearchBarVisibility();
                 break;
         }
+    }
+
+    @Override
+    public void closeFolder(boolean animate) {
+        Folder folder = getAppsView() != null ? getAppsView().getOpenFolder() : null;
+        Log.d("TEST", "folder=" + folder);
+        if (folder != null) {
+            if (folder.isEditingName()) {
+                folder.dismissEditingName();
+            }
+            closeFolder(folder, animate);
+        }
+        super.closeFolder(animate);
     }
 
     private void updateWorkspaceGridSize() {
@@ -117,8 +140,60 @@ public class SlimLauncher extends Launcher {
         }
     }
 
-    public static SlimLauncher getInstance() {
-        return sLauncher;
+    @Override
+    public boolean isAllAppsButtonRank(int rank) {
+        return false;
+    }
+
+    @Override
+    public View createShortcut(ViewGroup parent, ShortcutInfo info) {
+        View favorite = super.createShortcut(parent, info);
+        if (info.getIntent().getAction().equals(ShortcutHelper.ACTION_SLIM_LAUNCHER_SHORTCUT)) {
+            info.launcherAction = true;
+        }
+        return favorite;
+    }
+
+    @Override
+    public void onClick(View v) {
+        Object tag = v.getTag();
+        if (tag instanceof ShortcutInfo) {
+            ShortcutInfo info = (ShortcutInfo) tag;
+            if (info.launcherAction) {
+                onClickLauncherAction(v);
+                return;
+            }
+        }
+        super.onClick(v);
+        //closeFolder(false);
+    }
+
+    public void onClickLauncherAction(View view) {
+        ShortcutInfo info = (ShortcutInfo) view.getTag();
+        String value = info.getIntent().getStringExtra(ShortcutHelper.SHORTCUT_VALUE);
+        switch (value) {
+            case ShortcutHelper.SHORTCUT_ALL_APPS:
+                setAllAppsButton(view);
+                if (isAllAppsVisible()) {
+                    showWorkspace(true);
+                } else {
+                    onClickAllAppsButton(view);
+                }
+                break;
+            case ShortcutHelper.SHORTCUT_OVERVIEW:
+                if (getWorkspace().isInOverviewMode()) {
+                    showWorkspace(true);
+                } else {
+                    showOverviewMode(true);
+                }
+                break;
+            case ShortcutHelper.SHORTCUT_SETTINGS:
+                onClickSettingsButton(view);
+                break;
+            case ShortcutHelper.SHORTCUT_DEFAULT_PAGE:
+                getWorkspace().moveToDefaultScreen(true);
+                break;
+        }
     }
 
     private class SlimLauncherCallbacks implements LauncherCallbacks {
@@ -168,6 +243,7 @@ public class SlimLauncher extends Launcher {
 
         @Override
         public void onNewIntent(Intent intent) {
+            closeFolder(false);
         }
 
         @Override
@@ -406,7 +482,7 @@ public class SlimLauncher extends Launcher {
                         //Log.d("TEST", "scale=" + scale);
                         if (scale < 0.5) {
                             mGestureHelper.handleGestureAction(GestureHelper.Gesture.PINCH);
-                        } else if (scale > 2.2){
+                        } else if (scale > 2.2) {
                             mGestureHelper.handleGestureAction(GestureHelper.Gesture.SPREAD);
                         }
                     }
@@ -440,6 +516,7 @@ public class SlimLauncher extends Launcher {
 
         class WorkspaceScaleGestureDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
             private float mScalingFactor;
+
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 mScalingFactor = detector.getScaleFactor();

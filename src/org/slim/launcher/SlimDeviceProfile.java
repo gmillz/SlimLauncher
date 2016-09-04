@@ -3,14 +3,15 @@ package org.slim.launcher;
 import android.graphics.Rect;
 
 import com.android.launcher3.DeviceProfile;
+
 import org.slim.launcher.settings.SettingsProvider;
 
 public class SlimDeviceProfile {
 
     public int workspacePaddingTop;
 
+    @SuppressWarnings("unused")
     public SlimDeviceProfile(SlimLauncher slimLauncher) {
-        //updateFromPreferences();
     }
 
     public void updateFromPreferences() {
@@ -23,9 +24,5 @@ public class SlimDeviceProfile {
         Rect searchBarBounds = profile.getSearchBarBounds(false);
 
         workspacePaddingTop = showSearchBar ? searchBarBounds.bottom : 0;
-    }
-
-    public void layout(SlimLauncher slimLauncher) {
-
     }
 }

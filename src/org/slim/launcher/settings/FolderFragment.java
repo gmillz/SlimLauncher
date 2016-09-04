@@ -19,6 +19,9 @@ package org.slim.launcher.settings;
 import android.os.Bundle;
 import android.preference.Preference;
 
+import com.android.launcher3.R;
+
+@SuppressWarnings("unused")
 public class FolderFragment extends SettingsPreferenceFragment
         implements Preference.OnPreferenceChangeListener {
 

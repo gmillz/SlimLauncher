@@ -40,6 +40,7 @@
 
     <!-- Drawer Settings -->
     <string name="drawer_title">Drawer</string>
+    <string name="drawer_folders_title">Drawer folders</string>
 
     <!-- Dock Settings -->
     <string name="dock_title">Dock</string>
@@ -67,5 +68,12 @@
     <string name="gesture_target_settings">Open launcher settings</string>
     <string name="gesture_target_last_app">Last app</string>
     <string name="gesture_target_custom">Custom</string>
+
+    <!-- SlimLauncher actions -->
+    <string name="shortcut_picker_title">SlimLauncher shortcuts</string>
+    <string name="shortcut_action_launcher_apps">All apps</string>
+    <string name="shortcut_action_launcher_overview">Overview mode</string>
+    <string name="shortcut_action_launcher_settings">Launcher settings</string>
+    <string name="shortcut_action_launcher_homescreen">Default homescreen</string>
 
 </resources>

@@ -21,7 +21,6 @@ import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.preference.Preference;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.NumberPicker;
 
@@ -32,8 +31,6 @@ public class NumberPickerPreference extends DialogPreference {
 
     private String mMaxExternalKey, mMinExternalKey;
     private Preference mMaxExternalPreference, mMinExternalPreference;
-
-    private boolean mEnabled;
 
     private NumberPicker mNumberPicker;
 
@@ -93,9 +90,7 @@ public class NumberPickerPreference extends DialogPreference {
             min = mMinExternalPreference.getSharedPreferences().getInt(mMinExternalKey, mMin);
         }
 
-        LayoutInflater inflater =
-                (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.number_picker_dialog, null);
+        View view = View.inflate(getContext(), R.layout.number_picker_dialog, null);
 
         mNumberPicker = (NumberPicker) view.findViewById(R.id.number_picker);
 

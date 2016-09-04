@@ -48,7 +48,7 @@ import com.android.launcher3.util.Thunk;
 import java.util.ArrayList;
 
 /**
- * An icon that can appear on in the workspace representing an {@link UserFolder}.
+ * An icon that can appear on in the workspace representing an {@link Folder}.
  */
 public class FolderIcon extends FrameLayout implements FolderListener {
     @Thunk Launcher mLauncher;
@@ -140,7 +140,7 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         return !workspace.workspaceInModalState();
     }
 
-    static FolderIcon fromXml(int resId, Launcher launcher, ViewGroup group,
+    public static FolderIcon fromXml(int resId, Launcher launcher, ViewGroup group,
             FolderInfo folderInfo, IconCache iconCache) {
         @SuppressWarnings("all") // suppress dead code warning
         final boolean error = INITIAL_ITEM_ANIMATION_DURATION >= DROP_IN_ANIMATION_DURATION;
@@ -150,9 +150,16 @@ public class FolderIcon extends FrameLayout implements FolderListener {
                     "is dependent on this");
         }
 
+        FolderIcon icon = (FolderIcon) LayoutInflater.from(launcher).inflate(resId, group, false);
+        updateIconFromInfo(launcher, icon, folderInfo);
+        return icon;
+    }
+
+    public static void updateIconFromInfo(Launcher launcher,
+                                          FolderIcon icon, FolderInfo folderInfo) {
         DeviceProfile grid = launcher.getDeviceProfile();
 
-        FolderIcon icon = (FolderIcon) LayoutInflater.from(launcher).inflate(resId, group, false);
+
         icon.setClipToPadding(false);
         icon.mFolderName = (BubbleTextView) icon.findViewById(R.id.folder_icon_name);
         icon.mFolderName.setText(folderInfo.title);
@@ -183,7 +190,6 @@ public class FolderIcon extends FrameLayout implements FolderListener {
         folderInfo.addListener(icon);
 
         icon.setOnFocusChangeListener(launcher.mFocusHandler);
-        return icon;
     }
 
     @Override
